@@ -66,11 +66,11 @@ export async function POST(req: Request) {
     });
 
 
-
-
   } catch(error) {
+
     console.log("CONVERSATION ERROR", error);
     return NextResponse.json({ error: "サーバー側でエラーが発生しました"});
+
   }
 
   return NextResponse.json({success: "true"})

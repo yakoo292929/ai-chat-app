@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const filePath = `6fUBpnpeqlT95FV4pW8GsC5BRvA2/chatRoom/${chatId}`;
     // 3.ストレージにアップロード
     const url = await fileUploadToStorage(buffer, filePath, "audio/mpeg");
-    console.log("url", url);
+    // console.log("url", url);
 
 
     // AIの回答をfirestoreに保存
@@ -68,8 +68,10 @@ export async function POST(req: Request) {
 
 
   } catch(error) {
+
     console.log("TEXT_TO_SPEECH ERROR", error);
     return NextResponse.json({ error: "サーバー側でエラーが発生しました"});
+    
   }
 
   return NextResponse.json({success: "true"});

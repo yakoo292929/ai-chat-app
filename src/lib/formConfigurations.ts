@@ -11,7 +11,7 @@
 **/
 
 import { ChatFormData, ChatType } from "@/types";
-import { conversationSchema, imageGenerationSchema, textToSpeechSchema } from "./validationSchema";
+import { conversationSchema, imageGenerationSchema, speechToTextSchema, textToSpeechSchema } from "./validationSchema";
 
 //-----------------------------------------//
 // 画像枚数 セレクトオプション
@@ -61,8 +61,7 @@ const formConfig = {
   conversation: {schema: conversationSchema, defaultValue: {prompt: ""}},
   image_generation: {schema: imageGenerationSchema, defaultValue: {prompt: "", amount: "1", size: "256x256"}},
   text_to_speech: {schema: textToSpeechSchema, defaultValue: {prompt: ""}},
-
-  speech_to_text: {schema: conversationSchema, defaultValue: {prompt: ""}},
+  speech_to_text: {schema: speechToTextSchema, defaultValue: {file: undefined}},
   image_analysis: {schema: conversationSchema, defaultValue: {prompt: ""}},
 
 }
@@ -111,7 +110,16 @@ export const getRequestData = (values: ChatFormData, chatId: string, chatType: C
       };
     break;
 
+    case "speech_to_text":
+      apiUrl = "/api/speech_to_text";
+      const formDataSTT = new FormData();
+      formDataSTT.append("file", values.file);
+      formDataSTT.append("chatId", chatId);
+      apiData = formDataSTT;
+    break;
+
   }
+
   return {apiUrl, apiData};
 
 }
