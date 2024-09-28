@@ -1,9 +1,9 @@
 /**
  * ===========================================================================================
  * SYSTEM NAME    : ai-chart-app
- * PROGRAM ID     : src/app/api/image_generation/route.tsx
+ * PROGRAM ID     : src/app/api/text_to_speech/route.tsx
  * PROGRAM NAME   : route.tsx
- *                : 画像生成API
+ *                : テキスト読み上げAPI
  * DEVELOPED BY   : yamabakery
  * CREATE DATE    : 2024/09/01
  * CREATE AUTHOR  : yakoo292929
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   try {
 
     // ユーザーメッセージ取得
-    const { prompt, amount, size, chatId } = await req.json();
+    const { prompt, chatId } = await req.json();
 
     // ユーザーメッセージをfirestoreに保存
     await db.collection("chats").doc(chatId).collection("messages").add({
@@ -39,47 +39,37 @@ export async function POST(req: Request) {
     });
 
     // opneAI APIを呼び出してAIの回答を生成
-    const response = await openai.images.generate({
-      model: "dall-e-2",
-      prompt: prompt,
-      n: parseInt(amount, 10),
-      size: size,
+    const audioResponse = await openai.audio.speech.create({
+      model: "tts-1-hd",
+      voice: "alloy",
+      input: prompt,
+      // response_format: "mp3",
     });
-    const image_url = response.data[0].url;
+    // console.log("mp3", audioResponse);
 
-    // URL -> 1.ダウンロード -> 2.バイナリー変換 -> 3.保存パスを設定 -> 4.ストレージにアップロード
-    const imageDataPromises = response.data.map(async(item) => {
-      if (item.url) {
-          // 1.ダウンロード
-          const response = await fetch(item.url);
-          // 2.バイナリー変換
-          const arrayBuffer = await response.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          // 3.保存パスを設定
-          const filePath = `6fUBpnpeqlT95FV4pW8GsC5BRvA2/chatRoom/${chatId}`;
-          // 4.ストレージにアップロード
-          return await fileUploadToStorage(buffer, filePath, "image/png");
-
-      }
-    });
-    const urls = await Promise.all(imageDataPromises);
-    console.log("urls:", urls);
+    // 1.バイナリー変換 -> 2.保存パスを設定 -> 3.ストレージにアップロード
+    // 1.バイナリー変換
+    const arrayBuffer = await audioResponse.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    // 2.保存パスを設定
+    const filePath = `6fUBpnpeqlT95FV4pW8GsC5BRvA2/chatRoom/${chatId}`;
+    // 3.ストレージにアップロード
+    const url = await fileUploadToStorage(buffer, filePath, "audio/mpeg");
+    console.log("url", url);
 
 
     // AIの回答をfirestoreに保存
     await db.collection("chats").doc(chatId).collection("messages").add({
-      content: urls,
+      content: url,
       created_at: FieldValue.serverTimestamp(),
       sender: 'assistant',
-      type: 'image',
+      type: 'audio',
     });
 
 
   } catch(error) {
-
-    console.log("IMAGE_GENERATION ERROR", error);
+    console.log("TEXT_TO_SPEECH ERROR", error);
     return NextResponse.json({ error: "サーバー側でエラーが発生しました"});
-
   }
 
   return NextResponse.json({success: "true"});

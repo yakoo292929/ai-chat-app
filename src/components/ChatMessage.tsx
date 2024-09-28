@@ -1,4 +1,4 @@
-/**
+  /**
  * ===========================================================================================
  * SYSTEM NAME    : ai-chart-app
  * PROGRAM ID     : src/components/ChatMessage.tsx
@@ -23,6 +23,7 @@ import Panel from "@/components/Panel";
 import TextMessage from "@/components/TextMessage";
 import ImageMessage from "@/components/ImageMessage";
 import { cn } from "@/lib/utils";
+import AudioMessage from "./AudioMessage";
 
 const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
 
@@ -77,13 +78,18 @@ const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
   const getMessageComponent = (message:Message) => {
 
     switch(message.type) {
+
       case "text":
       return <TextMessage content={message.content} />
 
       case "image":
       return <ImageMessage images={message.content} />
 
+      case "audio":
+      return <AudioMessage src={message.content} />
+
     }
+    
   };
 
 

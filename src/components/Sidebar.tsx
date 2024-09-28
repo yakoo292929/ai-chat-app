@@ -13,6 +13,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import BotAvatar from "@/components/BotAvatar";
 import { Ellipsis, FileImage, FileOutput, FileSearch2, MessageCircle, Speech } from "lucide-react";
 import Link from "next/link";
@@ -24,8 +26,11 @@ import { cn } from "@/lib/utils";
 import { db } from "@/lib/firebase/firebaseClient";
 import { useAuth } from "@/context/AuthContext";
 import { ChatRoom } from "@/types";
+import axios from "axios";
 
 const Sidebar = () => {
+
+  const router = useRouter();
 
   // パス取得
   const pathname = usePathname();
@@ -101,6 +106,24 @@ const Sidebar = () => {
 
   }, []);
 
+  //-----------------------------------------//
+  // Chat削除関数
+  //-----------------------------------------//
+  const handleDeleteChat = async(chatId: string) => {
+    try {
+
+      const response = await axios.delete(`/api/deleteChat/${chatId}`);
+      console.log("response", response);
+      router.push("/conversation");
+
+    } catch(error) {
+
+      console.error(error);
+
+    }
+
+  }
+
   /////////////////////////////////////////////
   // 画面表示
   /////////////////////////////////////////////
@@ -152,7 +175,7 @@ const Sidebar = () => {
                     <Ellipsis size={16}/>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem>削除</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDeleteChat(room.id)}>削除</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

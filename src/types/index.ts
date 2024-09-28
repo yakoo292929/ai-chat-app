@@ -58,7 +58,15 @@ export interface ImageMessage {
   created_at: Timestamp;
 }
 
-export type Message = TextMessage | ImageMessage
+export interface AudioMessage {
+  id: string;
+  content: string;
+  type: "audio";
+  sender: "user" | "assistant";
+  created_at: Timestamp;
+}
+
+export type Message = TextMessage | ImageMessage | AudioMessage;
 
 export type ChatType =
   | "conversation"
