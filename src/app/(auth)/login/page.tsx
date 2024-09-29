@@ -42,6 +42,9 @@ const LoginPage = () => {
   //-----------------------------------------//
   const handleLogin = () => {
 
+    // ユーザーアカウント選択
+    provider.setCustomParameters({ prompt: "select_account"});
+    
     signInWithPopup(auth, provider)
       .then(() => {
         // router.push("/conversation");

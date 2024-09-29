@@ -16,6 +16,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import OpenAI from "openai";
 import { fileUploadToStorage } from "@/lib/firebase/storage";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { headers } from "next/headers";
+import { checkUserPermission, verifyToken } from "@/lib/firebase/auth";
 
 //-----------------------------------------//
 // OpenAI
@@ -28,14 +30,34 @@ export async function POST(req: Request) {
 
   try {
 
+    const headersList = headers();
+    const authHeader = headersList.get('Authorization');
+    // トークンが添付されているか？
+    if (!authHeader) {
+        return NextResponse.json({ error: "トークンが添付されていません。"}, {status: 401});
+    }
+
+    // デコード
+    const token = authHeader.split("Bearer ")[1];
+    const user =  await verifyToken(token);
+    // トークン有効チェック
+    if (!user) {
+        return NextResponse.json({ error: "無効なトークンです。"}, {status: 401});
+    }
+
     // ユーザーメッセージ取得
     const formData = await req.formData();
     const files = formData.getAll("files") as File[];
     const prompt = formData.get("prompt") as string;
     const chatId = formData.get("chatId") as string;
-    console.log(files);
-    console.log(prompt);
-    console.log(chatId);
+
+    // firestoreのデータを操作していいユーザーか？
+    const hasPermission = await checkUserPermission(user.uid, chatId);
+    // 権限有無チェック
+    if (!hasPermission) {
+        return NextResponse.json({ error: "操作が許可されていないか、リソースが存在しません。"}, {status: 403});
+    }
+
 
     let urls: string[] = [];
 
@@ -46,7 +68,7 @@ export async function POST(req: Request) {
           const arrayBuffer = await file.arrayBuffer();
           const buffer = Buffer.from(arrayBuffer);
           // 2.保存パスを設定
-          const filePath = `6fUBpnpeqlT95FV4pW8GsC5BRvA2/chatRoom/${chatId}`;
+          const filePath = `${user.uid}/chatRoom/${chatId}`;
           // 3.ストレージにアップロード
           return await fileUploadToStorage(buffer, filePath, file.type);
         });

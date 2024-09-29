@@ -14,6 +14,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase/firebaseAdmin";
 import { FieldValue } from "firebase-admin/firestore";
 import OpenAI from "openai";
+import { headers } from "next/headers";
+import { checkUserPermission, verifyToken } from "@/lib/firebase/auth";
 
 //-----------------------------------------//
 // OpenAI
@@ -26,8 +28,30 @@ export async function POST(req: Request) {
 
   try {
 
+    const headersList = headers();
+    const authHeader = headersList.get('Authorization');
+    // トークンが添付されているか？
+    if (!authHeader) {
+        return NextResponse.json({ error: "トークンが添付されていません。"}, {status: 401});
+    }
+
+    // デコード
+    const token = authHeader.split("Bearer ")[1];
+    const user =  await verifyToken(token);
+    // トークン有効チェック
+    if (!user) {
+        return NextResponse.json({ error: "無効なトークンです。"}, {status: 401});
+    }
+
     // ユーザーメッセージ取得
     const { prompt, chatId } = await req.json();
+
+    // firestoreのデータを操作していいユーザーか？
+    const hasPermission = await checkUserPermission(user.uid, chatId);
+    // 権限有無チェック
+    if (!hasPermission) {
+        return NextResponse.json({ error: "操作が許可されていないか、リソースが存在しません。"}, {status: 403});
+    }
 
     // ユーザーメッセージをfirestoreに保存
     await db.collection("chats").doc(chatId).collection("messages").add({

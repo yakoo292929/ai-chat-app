@@ -35,7 +35,8 @@ const Sidebar = () => {
   // パス取得
   const pathname = usePathname();
   // ユーザー情報取得
-  const {currentUser} = useAuth();
+  const {currentUser, userToken} = useAuth();
+
   // メニュー配列
   const routes = [
     {
@@ -104,7 +105,7 @@ const Sidebar = () => {
     // クリーンアップ[監視終了]
     return () => unsubscribe();
 
-  }, []);
+  }, [currentUser]);
 
   //-----------------------------------------//
   // Chat削除関数
@@ -112,7 +113,13 @@ const Sidebar = () => {
   const handleDeleteChat = async(chatId: string) => {
     try {
 
-      const response = await axios.delete(`/api/deleteChat/${chatId}`);
+      const response = await axios.delete(`/api/deleteChat/${chatId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      );
       console.log("response", response);
       router.push("/conversation");
 

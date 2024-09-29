@@ -21,6 +21,7 @@ import { UserInfo } from "firebase/auth";
 //-----------------------------------------//
 interface AuthContextState {
   currentUser: UserInfo | null
+  userToken: string | null
 }
 
 const AuthContext = createContext<AuthContextState | undefined>(undefined);
@@ -32,17 +33,21 @@ export const AuthContextProvider = ( {children}: {children: ReactNode} ) => {
   //-----------------------------------------//
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userToken, setUserToken] = useState<string | null>(null);
 
   //-----------------------------------------//
   // useEffect：副作用レンダリング以外の処理
   //-----------------------------------------//
   useEffect(() => {
 
-    const unsubscribe = auth.onIdTokenChanged((user) => {
+    const unsubscribe = auth.onIdTokenChanged(async(user) => {
       if (user) {
           setCurrentUser(user);
+          const token = await  user.getIdToken();
+          setUserToken(token);
       } else {
           setCurrentUser(null);
+          setUserToken(null);
       }
       setIsLoading(false);
     });
@@ -53,7 +58,7 @@ export const AuthContextProvider = ( {children}: {children: ReactNode} ) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={ {currentUser} }>
+    <AuthContext.Provider value={ {currentUser, userToken} }>
       {!isLoading && children}
     </AuthContext.Provider>
   );

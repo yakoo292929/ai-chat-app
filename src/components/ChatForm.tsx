@@ -34,7 +34,7 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
-  const { currentUser } = useAuth();
+  const { currentUser, userToken } = useAuth();
   const { schema, defaultValue } = getFormConfig(chatType);
 
   //-----------------------------------------//
@@ -127,7 +127,13 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
       // APIパラメーター取得
       const {apiUrl, apiData} = getRequestData(values, chatRef.id, chatType);
       // API実行
-      const respose = await axios.post(apiUrl, apiData);
+      const respose = await axios.post(apiUrl, apiData,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`
+          }
+        }
+      );
 
       if (isNewChat) {
           // 初めてメッセージを送信した場合
@@ -174,7 +180,6 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
   // ファイルプレビュー削除関数
   //-----------------------------------------//
   const files = form.watch("files");
-  console.log("ReactHookFormで管理している値", files);
 
   const handleFileRemove = (index: number) => {
 
