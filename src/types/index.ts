@@ -13,10 +13,11 @@
 import { Timestamp } from "firebase/firestore";
 
 export type ChatFormData = {
-  prompt: string,
-  amount: string,
-  size: string,
-  file: File,
+  prompt: string;
+  amount: string;
+  size: string;
+  file: File;
+  files: File[];
 }
 
 export interface ChatProps {
@@ -67,7 +68,15 @@ export interface AudioMessage {
   created_at: Timestamp;
 }
 
-export type Message = TextMessage | ImageMessage | AudioMessage;
+export interface ImageAnalysisMessage {
+  id: string;
+  content: { imageUrl: string[], text: string };
+  type: "image_analysis";
+  sender: "user" | "assistant";
+  created_at: Timestamp;
+}
+
+export type Message = TextMessage | ImageMessage | AudioMessage | ImageAnalysisMessage;
 
 export type ChatType =
   | "conversation"

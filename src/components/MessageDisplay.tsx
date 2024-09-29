@@ -20,8 +20,11 @@ const MessageDisplay = ({ content }: {content: string}) => {
   // 画面表示
   /////////////////////////////////////////////
   return (
+
     <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+    
   );
+
 };
 
 export default MessageDisplay;

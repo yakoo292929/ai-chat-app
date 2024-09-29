@@ -13,9 +13,14 @@
 import React from "react";
 
 const AudioMessage = ({ src }: { src: string }) => {
+
+  /////////////////////////////////////////////
+  // 画面表示
+  /////////////////////////////////////////////
   return (
     <audio controls src={src}></audio>
   );
+  
 };
 
 export default AudioMessage;

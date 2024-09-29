@@ -24,6 +24,7 @@ import TextMessage from "@/components/TextMessage";
 import ImageMessage from "@/components/ImageMessage";
 import { cn } from "@/lib/utils";
 import AudioMessage from "./AudioMessage";
+import ImageAnalysisMessage from "./ImageAnalysisMessage";
 
 const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
 
@@ -75,7 +76,7 @@ const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
   //-----------------------------------------//
   // メッセージコンポーネント取得関数
   //-----------------------------------------//
-  const getMessageComponent = (message:Message) => {
+  const getMessageComponent = (message: Message) => {
 
     switch(message.type) {
 
@@ -86,10 +87,13 @@ const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
       return <ImageMessage images={message.content} />
 
       case "audio":
-      return <AudioMessage src={message.content} />
+        return <AudioMessage src={message.content} />
+
+      case "image_analysis":
+        return <ImageAnalysisMessage content={message.content} />
 
     }
-    
+
   };
 
 
@@ -111,9 +115,9 @@ const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
               ) : (
                 <BotAvatar />
               )}
-              <div className={cn(message.type === "image" ? "flex-1" : "")}>
+              <div className={cn(message.type === "image" || message.type === "image_analysis" ? "flex-1" : "")}>
                 {/* メッセージのタイプによってタグを変更する */}
-                <div>{getMessageComponent(message)}</div>
+                {getMessageComponent(message)}
               </div>
             </div>
           ))}
@@ -121,7 +125,6 @@ const ChatMessage = ({chatId, chatType}: ChatMessageProps) => {
         </div>
       )}
     </>
-
 
   );
 

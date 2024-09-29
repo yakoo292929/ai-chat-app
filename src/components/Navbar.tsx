@@ -21,13 +21,16 @@ const Navbar = () => {
   // 画面表示
   /////////////////////////////////////////////
   return (
+
     <div className="flex items-center p-3">
       <MobaileSidebar />
       <div className="w-full flex justify-end">
         <UserIcon />
       </div>
     </div>
+    
   );
+
 };
 
 export default Navbar;

@@ -59,6 +59,7 @@ const Panel = ({chatType}: {chatType: string}) => {
   // 画面表示
   /////////////////////////////////////////////
   return (
+
     <div className="h-full flex flex-col items-center justify-center">
         <div className="relative h-72 w-72">
         <Image
@@ -70,6 +71,7 @@ const Panel = ({chatType}: {chatType: string}) => {
         </div>
         <p className="text-muted-foreground text-sm text-center">{message}</p>
     </div>
+    
   );
 
 };

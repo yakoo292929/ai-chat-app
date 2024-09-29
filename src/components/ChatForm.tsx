@@ -12,16 +12,16 @@
 
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { LoaderCircle, Paperclip, Send } from "lucide-react";
+import { LoaderCircle, Paperclip, Send, Trash2 } from "lucide-react";
 import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChatFormData, ChatFormProps } from "@/types";
+import { ChatFormData, ChatFormProps, ChatType } from "@/types";
 import { db } from "@/lib/firebase/firebaseClient";
-import { amountOptions, getFormConfig, getRequestData, sizeOptions } from "@/lib/formConfigurations";
+import { amountOptions, getFormConfig, getRequestData, selectFirstMessage, sizeOptions } from "@/lib/formConfigurations";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,18 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
   // useState：状態管理
   //-----------------------------------------//
   const [audio, setAudio] = useState<File | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+
+  //-----------------------------------------//
+  // useEffect：副作用レンダリング以外の処理
+  //-----------------------------------------//
+  useEffect(() => {
+    return () => {
+      // メモリー解放
+      imageUrls.forEach((url) => URL.revokeObjectURL(url));
+    }
+  }, []);
 
 
   //-----------------------------------------//
@@ -53,6 +65,7 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
 
   const isSubmitting = form.formState.isSubmitting;
 
+
   //-----------------------------------------//
   // ファイル変更取得関数
   //-----------------------------------------//
@@ -61,32 +74,35 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
     // エラーチェック
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    form.setValue("file", file);
-    setAudio(file);
+         // 音声テキスト変換の場合
+        if (chatType === "speech_to_text") {
+            const file = files[0];
+            form.setValue("file", file);
+            setAudio(file);
+        }
+
+        // 画像解析の場合
+        if (chatType === "image_analysis") {
+            const newFiles = Array.from(files);
+            // console.log(newFiles);
+
+            const imageUrls = newFiles.map((file) => {
+              return URL.createObjectURL(file);
+            });
+
+            setImageUrls((prevImageUrls) => [...prevImageUrls, ...imageUrls]);
+            const updatedFiles = form.getValues("files") || [];
+            form.setValue("files", [...updatedFiles, ...newFiles] );
+        }
 
   }
 
-  //-----------------------------------------//
-  // ファーストメッセージ選択関数
-  //-----------------------------------------//
-  const selectFirstMessage = (values: ChatFormData, chatType: string) => {
-    switch(chatType) {
-      case "speech_to_text":
-        return values.file.name;
-
-      default:
-        return values.prompt;
-
-    }
-
-  }
 
   //-----------------------------------------//
   // チャット更新関数
   //-----------------------------------------//
   const onSubmit = async(values: ChatFormData) => {
-    console.log(values.amount);
+    // console.log(values.amount);
 
     // チャットルーム作成
     try {
@@ -133,9 +149,18 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
           fileInputRef.current.value = "";
       }
 
-      // オーディオ選択解除
+      // 音声テキスト変換
       if (chatType === "speech_to_text") {
-         setAudio(null);
+          // ステート初期化
+          setAudio(null);
+      }
+
+      // 画像解析
+      if (chatType === "image_analysis") {
+          // メモリー解放
+          imageUrls.forEach((url) => URL.revokeObjectURL(url));
+          // ステート初期化
+          setImageUrls([]);
       }
 
       // フォームリセット
@@ -146,11 +171,37 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
   }
 
   //-----------------------------------------//
+  // ファイルプレビュー削除関数
+  //-----------------------------------------//
+  const files = form.watch("files");
+  console.log("ReactHookFormで管理している値", files);
+
+  const handleFileRemove = (index: number) => {
+
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+
+    // メモリー解放
+    URL.revokeObjectURL(imageUrls[index]);
+
+    setImageUrls((prevImageUrls) => prevImageUrls.filter((_, idx) => idx !== index));
+    if (files) {
+        const updatedFiles = files.filter((_, idx) => idx !== index);
+        console.log(updatedFiles);
+        form.setValue("files", updatedFiles);
+    }
+
+  }
+
+
+  //-----------------------------------------//
   // ファイルプレビューコンポーネント
   //-----------------------------------------//
   const FilePreview = () => (
     <div className="flex flex-wrap gap-2 mb-4">
 
+        {/* speech_to_textの場合 */}
         {audio && (
         <div className="flex items-center gap-2 p-4 rounded-lg">
             <div className="relative h-10 w-10">
@@ -160,8 +211,30 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
         </div>
         )}
 
+        {/* image_analysisの場合 */}
+        {imageUrls.length > 0 &&
+          imageUrls.map((imageUrl, index) => (
+            <div key={index} className="relative group w-12 h-12">
+              <Image
+                src={imageUrl}
+                alt="File preview"
+                fill
+                className="rounded object-cover"
+              />
+              {!isSubmitting && (
+                <button
+                  onClick={() => handleFileRemove(index)}
+                  className="absolute -top-2 -right-2 p-1 text-white bg-black bg-opacity-75 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
+            </div>
+          ))}
+
     </div>
-  )
+  );
+
 
   /////////////////////////////////////////////
   // 画面表示
@@ -169,9 +242,7 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
   return (
     <div className="bg-white p-3">
 
-        {audio && (
-          <FilePreview />
-        )}
+        {(audio || imageUrls.length > 0) && <FilePreview />}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -242,7 +313,7 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
               {(chatType === "speech_to_text" || chatType === "image_analysis") && (
                 <FormField
                   control={form.control}
-                  name="file"
+                  name={chatType === "speech_to_text" ? "file" : "files"}
                   render={({ field: {value, ref, onChange,  ...filedProps} }) => (
                     <FormItem>
                       <FormLabel><Paperclip/></FormLabel>
@@ -254,7 +325,7 @@ const ChatForm = ({chatId, chatType, setChatId}: ChatFormProps) => {
                           }}
                           className="hidden"
                           type="file"
-                          multiple
+                          multiple={chatType === "image_analysis"}
                           onChange={(event) => {
                             const files = event.target.files;
                             handleFileChange(files);

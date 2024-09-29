@@ -3,7 +3,7 @@
  * SYSTEM NAME    : ai-chart-app
  * PROGRAM ID     : src/components/ImageMessage.tsx
  * PROGRAM NAME   : ImageMessage.tsx
- *                : イメージメッセージ
+ *                : 画像生成メッセージ
  * DEVELOPED BY   : yamabakery
  * CREATE DATE    : 2024/09/01
  * CREATE AUTHOR  : yakoo292929
@@ -17,7 +17,12 @@ import { Card, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const ImageMessage = ({ images }: { images: string[] }) => {
+
+  /////////////////////////////////////////////
+  // 画面表示
+  /////////////////////////////////////////////
   return (
+
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
       {images.map((imageUrl) => (
         <Card key={imageUrl} className="rounded-lg overflow-hidden">
@@ -44,7 +49,9 @@ const ImageMessage = ({ images }: { images: string[] }) => {
         </Card>
       ))}
     </div>
+    
   );
+
 };
 
 export default ImageMessage;

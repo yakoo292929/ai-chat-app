@@ -25,6 +25,7 @@ const Chat = ({initialChatId, chatType}: ChatProps) => {
   //-----------------------------------------//
   const [chatId, setChatId] = useState(initialChatId);
 
+
   /////////////////////////////////////////////
   // 画面表示
   /////////////////////////////////////////////
@@ -36,6 +37,7 @@ const Chat = ({initialChatId, chatType}: ChatProps) => {
     </>
 
   );
+
 };
 
 export default Chat;

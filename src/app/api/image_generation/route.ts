@@ -59,7 +59,6 @@ export async function POST(req: Request) {
           const filePath = `6fUBpnpeqlT95FV4pW8GsC5BRvA2/chatRoom/${chatId}`;
           // 4.ストレージにアップロード
           return await fileUploadToStorage(buffer, filePath, "image/png");
-
       }
     });
     const urls = await Promise.all(imageDataPromises);

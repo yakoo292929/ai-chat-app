@@ -15,11 +15,13 @@ import MessageDisplay from "@/components/MessageDisplay";
 
 const TextMessage = ({ content }: { content: string } ) => {
   return (
+    
     <div className="bg-white p-4 rounded-lg shadow break-all whitespace-pre-wrap">
       <MessageDisplay content={ content }/>
     </div>
 
   );
+
 };
 
 export default TextMessage;
